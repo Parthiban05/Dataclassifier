@@ -47,6 +47,7 @@ public class Utility
     public static List<Confidential> confidentialsEncryptData = new ArrayList<Confidential>();
     public static List<Defaultdata> defaultdatas = new ArrayList<Defaultdata>();
     public static String downloadUrl = "";
+    public static Map<String,String> downloadLinks = new HashMap<String,String>();
     static
     {
         columnmap.put("Emp ID", "EmployeeId");

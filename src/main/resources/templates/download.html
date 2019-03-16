@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Download Page</title>
+</head>
+<body>
+
+<form action="#" th:action="@{/classifier/sendmail}" th:object="${mailEntity}" method="post" th:if:"${showemailform}">
+	<input type="email"  placeholder="Enter your email id" th:field="*{email}"/>
+	<button class="sk_clsSendEmailBtn" type="submit">Send Email
+	</button>
+</form>
+	<span th:if="${emailSuccess}" th:text="${emailSuccess}"></span>
+<form action="#" th:action="@{/classifier/validateotp}" th:object="${otpEntity}" method="post" th:if:"${showotpform}">
+	<input type="password"  placeholder="Enter your OTP Password" th:field="*{otp}"/>
+	<button class="sk_clsSendEmailBtn" type="submit">Validate OTP
+	</button>
+</form>
+	
+	
+	<button class="sk_clsDownload" th:if="${downloadurl}">
+			<a th:href="${downloadurl}">Click Here to Download</a>
+		</button>
+</body>
+</html>

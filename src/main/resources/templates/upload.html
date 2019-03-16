@@ -8,8 +8,8 @@
 		th:switch="${type}">
 		<input type="file" name="file"><br> <br> <input
 			type="submit" value="Submit">
-		<button class="sk_clsDownload" th:if="${downloadurl}">
-			<a th:href="${downloadurl}">Download</a>
+		<button class="sk_clsDownload" th:if="${showdownloadurl}">
+			<a href="/classifier/download/default">Download</a>
 		</button>
 		<br> <br> <label>Classification</label> <select
 			style="margin-left: 20px;" class="cls_selectClassification"

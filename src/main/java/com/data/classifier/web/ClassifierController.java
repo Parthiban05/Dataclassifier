@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.data.classifier.model.Defaultdata;
 import com.data.classifier.model.Highconfidential;
+import com.data.classifier.model.MailEntity;
+import com.data.classifier.model.OtpEntity;
 import com.data.classifier.service.DataclassifierService;
 import com.data.classifier.utility.Utility;
 
@@ -58,30 +61,34 @@ public class ClassifierController
             model.addAttribute("message", "High Confidential data");
             model.addAttribute("columnmaps", Utility.getHighConfidentialColumns());
             model.addAttribute("datasets", Utility.getHighConfidentialData());
+            model.addAttribute("showdownloadurl", true);
         }
         else if (type.equals("confidential") && defaultDataList.size() > 0)
         {
             model.addAttribute("message", "Confidential data");
             model.addAttribute("columnmaps", Utility.getConfidentialColumns());
             model.addAttribute("datasets", Utility.getConfidentialData());
+            model.addAttribute("showdownloadurl", true);
         }
         else if (type.equals("encryptdata") && defaultDataList.size() > 0)
         {
             model.addAttribute("message", "High Confidential Encrypted Data");
             model.addAttribute("columnmaps", Utility.getHighConfidentialColumns());
             model.addAttribute("datasets", Utility.getHighConfidentialEncryptedData());
+            model.addAttribute("showdownloadurl", true);
         }
         else if (type.equals("encryptconfidentialdata") && defaultDataList.size() > 0)
         {
             model.addAttribute("message", "Confidential Encrypted Data");
             model.addAttribute("columnmaps", Utility.getConfidentialColumns());
             model.addAttribute("datasets", Utility.getConfidentialEncryptedData());
+            model.addAttribute("showdownloadurl", true);
         }
         else if (defaultDataList.size() > 0)
         {
             model.addAttribute("message", "Default data");
+            model.addAttribute("showdownloadurl", true);
         }
-        model.addAttribute("downloadurl", Utility.downloadUrl);
         model.addAttribute("type", type);
         return "upload";
     }
@@ -117,7 +124,7 @@ public class ClassifierController
             model.addAttribute("columnmaps", Utility.getDefaultColumns());
             model.addAttribute("datasets", Utility.getDefaultData());
             Utility.downloadUrl = downloadfolder + file.getOriginalFilename();
-            model.addAttribute("downloadurl", Utility.downloadUrl);
+            model.addAttribute("showdownloadurl", true);
         }
         catch (IOException e)
         {
@@ -133,6 +140,36 @@ public class ClassifierController
         return "uploadStatus";
     }
 
+    @GetMapping("/download/{type}")
+    public String download(Model model, @PathVariable("type") String type)
+    {
+        model.addAttribute("mailEntity", new MailEntity());
+        model.addAttribute("otpEntity", new OtpEntity());
+        model.addAttribute("showemailform", true);
+        if (type.equals("emailsuccess"))
+        {
+            model.addAttribute("showotpform", true);
+            model.addAttribute("emailSuccess", "Email sent successfully, please check your inbox and enter the OTP to download the file");
+            model.addAttribute("showemailform", false);
+        }
+        else if (type.equals("emailfailed"))
+        {
+            model.addAttribute("emailSuccess", "Email sent failed, please try agian later");
+        }
+        else if (type.equals("otpsuccess"))
+        {
+            model.addAttribute("emailSuccess", "Your OTP has been validated successfully, please click here to download");
+            model.addAttribute("downloadurl", Utility.downloadUrl);
+        }
+        else if (type.equals("otpfail"))
+        {
+            model.addAttribute("showotpform", true);
+            model.addAttribute("emailSuccess", "Your OTP is wrong, please enter the valid OTP");
+            model.addAttribute("showemailform", false);
+        }
+        return "download";
+    }
+
     @GetMapping("/highconfidentials")
     public @ResponseBody List<Highconfidential> highconfidentials()
     {
@@ -143,5 +180,26 @@ public class ClassifierController
     public @ResponseBody List<Defaultdata> getDefaultData()
     {
         return Utility.getDefaultData();
+    }
+
+    @PostMapping("/sendmail")
+    public String sendmail(@ModelAttribute MailEntity mailEntity)
+    {
+        System.out.println("Email:" + mailEntity.getEmail());
+        boolean result = dataclassifierService.sendEmail(mailEntity.getEmail());
+        if (result) { return "redirect:" + "/classifier/download/" + "emailsuccess"; }
+        return "redirect:" + "/classifier/download/" + "emailfailed";
+    }
+
+    @PostMapping("/validateotp")
+    public String sendmail(@ModelAttribute OtpEntity otpEntity)
+    {
+        System.out.println("OTP:" + otpEntity.getOtp());
+        if (Utility.downloadLinks.get(otpEntity.getOtp()) != null)
+        {
+            Utility.downloadUrl = Utility.downloadLinks.get(otpEntity.getOtp());
+            return "redirect:" + "/classifier/download/" + "otpsuccess";
+        }
+        return "redirect:" + "/classifier/download/" + "otpfail";
     }
 }
